@@ -1,0 +1,41 @@
+name: Update Behance Projects
+
+on:
+  schedule:
+    # Runs once a day at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  scrape-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./.github/workflows
+
+      - name: Run scraper
+        run: node scrape.js
+        working-directory: ./.github/workflows
+
+      - name: Commit and push if there are changes
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions-bot@github.com'
+          git add portfolio/projects.json
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated: Update Behance projects"
+            git push
+          fi
